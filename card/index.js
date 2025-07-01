@@ -1,13 +1,10 @@
-import { createAgent, IDIDManager } from '@veramo/core'
-import { KeyManager } from '@veramo/key-manager'
-import { KeyDIDProvider } from '@veramo/did-provider-key'
-import { DIDManager } from '@veramo/did-manager'
-import { KeyManagementSystem } from '@veramo/kms-local'
-import { MemoryPrivateKeyStore } from '@veramo/key-manager'
-import { MemoryDIDStore } from '@veramo/did-manager'
-import { MemoryKeyStore } from '@veramo/key-manager'
+const { createAgent } = require('@veramo/core')
+const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager')
+const { KeyDIDProvider } = require('@veramo/did-provider-key')
+const { DIDManager, MemoryDIDStore } = require('@veramo/did-manager')
+const { KeyManagementSystem } = require('@veramo/kms-local')
 
-const agent = createAgent<IDIDManager>({
+const agent = createAgent({
   plugins: [
     new KeyManager({
       store: new MemoryKeyStore(),
