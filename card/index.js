@@ -33,8 +33,3 @@ async function main() {
 }
 
 main()
-
-//testtesttest
-//chainnova123
-//hihihihihihi
-//ejdfjiiee
