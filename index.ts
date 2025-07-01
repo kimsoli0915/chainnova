@@ -2,7 +2,8 @@ import { createAgent, IDIDManager } from '@veramo/core'
 import { KeyManager } from '@veramo/key-manager'
 import { KeyDIDProvider } from '@veramo/did-provider-key'
 import { DIDManager } from '@veramo/did-manager'
-import { MemoryPrivateKeyStore, KeyManagementSystem } from '@veramo/kms-local'
+import { KeyManagementSystem } from '@veramo/kms-local'
+import { MemoryPrivateKeyStore } from '@veramo/key-manager'
 import { MemoryDIDStore } from '@veramo/did-manager'
 import { MemoryKeyStore } from '@veramo/key-manager'
 
@@ -32,3 +33,5 @@ async function main() {
 }
 
 main()
+
+//testtesttest
