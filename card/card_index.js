@@ -1,6 +1,5 @@
 const express = require('express')
 const cors = require('cors')
-const bodyParser = require('body-parser')
 
 // Veramo 패키지 임포트
 const { createAgent } = require('@veramo/core')
@@ -12,7 +11,7 @@ const { CredentialIssuer } = require('@veramo/credential-w3c')
 
 const app = express()
 app.use(cors())
-app.use(bodyParser.json())
+app.use(express.json())
 
 // Veramo 에이전트 설정
 const agent = createAgent({
