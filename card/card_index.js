@@ -1,8 +1,8 @@
 const express = require('express')
 const cors = require('cors')
 const { ethers } = require('ethers')
+const crypto = require('crypto') // SHA256을 위한 crypto 모듈 추가
 
-// Veramo 패키지 임포트
 const { createAgent } = require('@veramo/core')
 const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager')
 const { DIDManager, MemoryDIDStore } = require('@veramo/did-manager')
@@ -14,7 +14,6 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-// Veramo 에이전트 설정
 const agent = createAgent({
   plugins: [
     new KeyManager({
@@ -27,35 +26,26 @@ const agent = createAgent({
       store: new MemoryDIDStore(),
       defaultProvider: 'did:key',
       providers: {
-        'did:key': new KeyDIDProvider({
-          defaultKms: 'local'
-        })
+        'did:key': new KeyDIDProvider({ defaultKms: 'local' })
       }
     }),
     new CredentialIssuer()
   ]
 })
 
-// VC 발급 API (MetaMask 사용자 서명 검증 구조)
 app.post('/issue-vc', async (req, res) => {
-  // 1. 프론트에서 모두 받아오기
   const { birth, cardNumber, expiryDate, cvc, cardPassword, signature, userAddress } = req.body
 
   try {
-    // 2. 메시지 구성 (프론트와 완전히 동일하게!)
     const message = JSON.stringify({ birth, cardNumber, expiryDate, cvc, cardPassword })
 
-    // 3. 사용자의 MetaMask 서명 검증
     const recoveredAddress = ethers.verifyMessage(message, signature)
     if (!recoveredAddress || recoveredAddress.toLowerCase() !== userAddress.toLowerCase()) {
       return res.status(400).send('Invalid user signature')
     }
 
-    // 4. 카드사 DID (issuer)
-    // 주의: 실제 서비스에서는 카드사 DID/키를 DB 등에 보관/재사용해야 함!
     const issuer = await agent.didManagerCreate()
 
-    // 5. VC 발급 (사용자 서명도 포함)
     const vc = await agent.createVerifiableCredential({
       credential: {
         issuer: { id: issuer.did },
@@ -69,13 +59,16 @@ app.post('/issue-vc', async (req, res) => {
           expiryDate,
           cvc,
           cardPassword,
-          userSignature: signature   // 사용자 서명 포함!
+          userSignature: signature
         }
       },
       proofFormat: 'jwt'
     })
 
-    res.json(vc)
+    // 생성된 VC의 SHA256 해시값 생성
+    const vcHash = crypto.createHash('sha256').update(JSON.stringify(vc)).digest('hex')
+
+    res.json({ vc, vcHash })
   } catch (err) {
     console.error(err)
     res.status(500).send('VC 발급 실패')
