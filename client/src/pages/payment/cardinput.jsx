@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
+import { ethers } from 'ethers'   // 👈 추가!
 
 export default function CardInput() {
   const [form, setForm] = useState({
@@ -11,10 +12,10 @@ export default function CardInput() {
     cardPassword: ''
   });
   const [result, setResult] = useState(null);
+  const [signing, setSigning] = useState(false);
 
   // 카드번호 입력: 숫자만, 16자리 제한
   const handleCardNumberChange = (e) => {
-    // 입력된 값에서 숫자만 추출하고 16자리 제한
     const onlyNumber = e.target.value.replace(/\D/g, '').slice(0, 16);
     setForm({
       ...form,
@@ -22,7 +23,6 @@ export default function CardInput() {
     });
   };
 
-  // 화면에 표시할 때 4자리마다 띄어쓰기
   const formatCardNumber = (num) => {
     if (!num) return '';
     return num.replace(/(.{4})/g, '$1 ').trim();
@@ -35,21 +35,47 @@ export default function CardInput() {
     });
   };
 
+  // 👇 여기서 MetaMask 서명 + 서버 전송
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSigning(true);
     try {
       const expiryDate = `${form.expiryMonth}/${form.expiryYear}`;
-      const response = await axios.post('http://localhost:3001/issue-vc', {
+      const payload = {
         birth: form.birth,
-        cardNumber: form.cardNumber, // 서버로 보낼 때는 숫자만!
-        expiryDate: expiryDate,
+        cardNumber: form.cardNumber,
+        expiryDate,
         cvc: form.cvc,
         cardPassword: form.cardPassword
+      };
+      const message = JSON.stringify(payload);
+
+      // --- MetaMask 연동 및 서명 부분 ---
+      if (!window.ethereum) {
+        alert("MetaMask가 설치되어 있지 않습니다.");
+        setSigning(false);
+        return;
+      }
+      // 1. MetaMask 연결
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+
+      // 2. 메시지 서명
+      const signature = await signer.signMessage(message);
+
+      // 3. 백엔드에 카드정보+서명+주소 전송
+      const response = await axios.post('http://localhost:3001/issue-vc', {
+        ...payload,
+        signature,
+        userAddress
       });
       setResult(response.data);
     } catch (err) {
       setResult('VC 발급 실패');
     }
+    setSigning(false);
   };
 
   return (
@@ -81,7 +107,7 @@ export default function CardInput() {
               value={formatCardNumber(form.cardNumber)}
               onChange={handleCardNumberChange}
               required
-              maxLength={19} // 공백 포함 최대길이
+              maxLength={19}
               style={{ width: '100%' }}
               inputMode="numeric"
               autoComplete="cc-number"
@@ -148,8 +174,8 @@ export default function CardInput() {
             />
           </label>
         </div>
-        <button type="submit" style={{ marginTop: 20, width: '100%' }}>
-          결제요청
+        <button type="submit" style={{ marginTop: 20, width: '100%' }} disabled={signing}>
+          {signing ? 'MetaMask 서명 중...' : '결제요청'}
         </button>
       </form>
       {result && (
