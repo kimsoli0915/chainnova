@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { ethers } from 'ethers'
-
+import { Circles } from 'react-loader-spinner'
 
 export default function CardInput() {
   const [form, setForm] = useState({
@@ -12,8 +12,10 @@ export default function CardInput() {
     cvc: '',
     cardPassword: ''
   })
-  const [result, setResult] = useState(null)
-  const [signing, setSigning] = useState(false)
+
+  const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
 
   // 마스킹 토글 상태
   const [showCardNumber, setShowCardNumber] = useState(false)
@@ -25,9 +27,15 @@ export default function CardInput() {
     setForm(prev => ({ ...prev, cardNumber: onlyNumber }))
   }
 
-  // 카드 비밀번호 숫자만 4자리 제한
+  // 카드번호 보기용 포맷
+  const formatCardNumber = (num) => {
+    if (!num) return ''
+    return num.replace(/(.{4})/g, '$1 ').trim()
+  }
+
+  // 카드 비밀번호 숫자만 2자리 제한
   const handleCardPasswordChange = (e) => {
-    const onlyNumber = e.target.value.replace(/\D/g, '').slice(0, 4)
+    const onlyNumber = e.target.value.replace(/\D/g, '').slice(0, 2)
     setForm(prev => ({ ...prev, cardPassword: onlyNumber }))
   }
 
@@ -38,7 +46,10 @@ export default function CardInput() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setSigning(true)
+    setLoading(true)
+    setDone(false)
+    setError('')
+
     try {
       const expiryDate = `${form.expiryMonth}/${form.expiryYear}`
       const payload = {
@@ -48,34 +59,45 @@ export default function CardInput() {
         cvc: form.cvc,
         cardPassword: form.cardPassword
       }
+
       const message = JSON.stringify(payload)
 
       if (!window.ethereum) {
         alert('MetaMask가 설치되어 있지 않습니다.')
-        setSigning(false)
+        setLoading(false)
         return
       }
 
+      // 1. 지갑 연결 + 주소 가져오기
       await window.ethereum.request({ method: 'eth_requestAccounts' })
       const provider = new ethers.BrowserProvider(window.ethereum)
       const signer = await provider.getSigner()
       const userAddress = await signer.getAddress()
 
+      // 2. 메시지 서명
       const signature = await signer.signMessage(message)
 
-      const response = await axios.post('http://localhost:3001/issue-vc', {
+      // 3. 서버에 전송
+      const res = await axios.post('http://localhost:3001/issue-vc', {
         ...payload,
-        signature,
-        userAddress
+        userAddress,
+        signature
       })
-      setResult(response.data)
+
+      if (res.status === 200) {
+        setDone(true)
+      } else {
+        setError('VC 발급 실패')
+      }
     } catch (err) {
-      setResult('VC 발급 실패')
+      console.error(err)
+      setError('VC 발급 실패! 다시 시도해주세요.')
     }
-    setSigning(false)
+
+    setLoading(false)
   }
 
-  // 토글 버튼 스타일 공통 (flex 중앙 정렬)
+  // 토글 버튼 스타일
   const toggleButtonStyle = {
     position: 'absolute',
     right: 10,
@@ -90,7 +112,6 @@ export default function CardInput() {
     border: 'none'
   }
 
-  // 자물쇠 이모지 아이콘
   const LockIcon = () => <span role="img" aria-label="자물쇠" style={{ fontSize: 18 }}>🔒</span>
   const UnlockIcon = () => <span role="img" aria-label="자물쇠 열림" style={{ fontSize: 18 }}>🔓</span>
 
@@ -119,20 +140,15 @@ export default function CardInput() {
             type={showCardNumber ? 'text' : 'password'}
             name="cardNumber"
             placeholder="카드번호"
-            value={form.cardNumber}
+            value={showCardNumber ? formatCardNumber(form.cardNumber) : form.cardNumber}
             onChange={handleCardNumberChange}
-            maxLength={16}
+            maxLength={showCardNumber ? 19 : 16}
             inputMode="numeric"
             autoComplete="cc-number"
             required
             style={{ width: '100%', padding: '8px 40px 8px 10px', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
           />
-          <button
-            type="button"
-            onClick={() => setShowCardNumber(prev => !prev)}
-            style={toggleButtonStyle}
-            aria-label={showCardNumber ? '카드번호 숨기기' : '카드번호 보기'}
-          >
+          <button type="button" onClick={() => setShowCardNumber(prev => !prev)} style={toggleButtonStyle} aria-label={showCardNumber ? '카드번호 숨기기' : '카드번호 보기'}>
             {showCardNumber ? <UnlockIcon /> : <LockIcon />}
           </button>
         </div>
@@ -191,47 +207,33 @@ export default function CardInput() {
             placeholder="카드 비밀번호(앞 2자리)"
             value={form.cardPassword}
             onChange={handleCardPasswordChange}
-            maxLength={4}
+            maxLength={2}
             inputMode="numeric"
             autoComplete="cc-password"
             required
             style={{ width: '100%', padding: '8px 40px 8px 10px', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
           />
-          <button
-            type="button"
-            onClick={() => setShowCardPassword(prev => !prev)}
-            style={toggleButtonStyle}
-            aria-label={showCardPassword ? '카드 비밀번호 숨기기' : '카드 비밀번호 보기'}
-          >
+          <button type="button" onClick={() => setShowCardPassword(prev => !prev)} style={toggleButtonStyle} aria-label={showCardPassword ? '카드 비밀번호 숨기기' : '카드 비밀번호 보기'}>
             {showCardPassword ? <UnlockIcon /> : <LockIcon />}
           </button>
         </div>
 
-        <button
-          type="submit"
-          style={{
-            marginTop: 20,
-            width: '100%',
-            padding: '12px 0',
-            backgroundColor: '#0070f3',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            fontWeight: '600',
-            fontSize: 16,
-            cursor: 'pointer'
-          }}
-          disabled={signing}
-        >
-          {signing ? 'MetaMask 서명 중...' : '결제요청'}
-
+        <button type="submit" disabled={loading} style={{ marginTop: 20, width: '100%', padding: '12px 0', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: 4, fontWeight: '600', fontSize: 16, cursor: 'pointer' }}>
+          {loading ? 'VC 발급 중...' : '결제요청'}
         </button>
       </form>
 
-      {result && (
-        <pre style={{ marginTop: 20, background: '#f4f4f4', padding: 10, fontSize: 14, whiteSpace: 'pre-wrap' }}>
-          {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-        </pre>
+      {loading && (
+        <div style={{ marginTop: 20, textAlign: 'center' }}>
+          <Circles height="40" width="40" visible={true} />
+        </div>
+      )}
+
+      {done && !loading && (
+        <p style={{ color: 'green', marginTop: 20 }}>✅ VC 발급 완료!</p>
+      )}
+      {error && (
+        <p style={{ color: 'red', marginTop: 20 }}>❌ {error}</p>
       )}
     </div>
   )

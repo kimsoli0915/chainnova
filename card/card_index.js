@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const { ethers } = require('ethers')
-const crypto = require('crypto') // SHA256을 위한 crypto 모듈 추가
+const crypto = require('crypto') // SHA256 해시를 위한 모듈
 
 const { createAgent } = require('@veramo/core')
 const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager')
@@ -13,7 +13,9 @@ const { CredentialIssuer } = require('@veramo/credential-w3c')
 const app = express()
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
+// Veramo 에이전트 설정
 const agent = createAgent({
   plugins: [
     new KeyManager({
@@ -33,19 +35,24 @@ const agent = createAgent({
   ]
 })
 
+// VC 발급 API
 app.post('/issue-vc', async (req, res) => {
   const { birth, cardNumber, expiryDate, cvc, cardPassword, signature, userAddress } = req.body
 
   try {
+    // 클라이언트가 서명한 원본 메시지
     const message = JSON.stringify({ birth, cardNumber, expiryDate, cvc, cardPassword })
 
+    // MetaMask 서명 검증
     const recoveredAddress = ethers.verifyMessage(message, signature)
     if (!recoveredAddress || recoveredAddress.toLowerCase() !== userAddress.toLowerCase()) {
-      return res.status(400).send('Invalid user signature')
+      return res.status(400).json({ error: '서명 불일치' })
     }
 
+    // issuer DID 생성
     const issuer = await agent.didManagerCreate()
 
+    // VC 생성
     const vc = await agent.createVerifiableCredential({
       credential: {
         issuer: { id: issuer.did },
@@ -66,12 +73,17 @@ app.post('/issue-vc', async (req, res) => {
     })
 
     // 생성된 VC의 SHA256 해시값 생성
-    const vcHash = crypto.createHash('sha256').update(JSON.stringify(vc)).digest('hex')
+    const vcHash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(vc))
+      .digest('hex')
 
+    // VC와 VC 해시 함께 반환
     res.json({ vc, vcHash })
+
   } catch (err) {
-    console.error(err)
-    res.status(500).send('VC 발급 실패')
+    console.error('VC 발급 실패:', err)
+    res.status(500).json({ error: 'VC 발급 중 오류 발생' })
   }
 })
 
