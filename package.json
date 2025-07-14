@@ -19,15 +19,18 @@
     "@veramo/key-manager": "^6.0.0",
     "@veramo/kms-local": "^6.0.0",
     "axios": "^1.10.0",
+    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "ethers": "^6.15.0",
     "express": "^5.1.0",
     "react-loader-spinner": "^6.1.6",
+    "react-router-dom": "^7.6.3",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.25"
   },
   "devDependencies": {
     "@types/node": "^24.0.8",
+    "hardhat": "^2.25.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
