@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { ethers } from 'ethers'   // 👈 추가!
 
+
 export default function CardInput() {
   const [form, setForm] = useState({
     birth: '',
@@ -16,12 +17,16 @@ export default function CardInput() {
 
   // 카드번호 입력: 숫자만, 16자리 제한
   const handleCardNumberChange = (e) => {
+
     const onlyNumber = e.target.value.replace(/\D/g, '').slice(0, 16);
     setForm({
       ...form,
       cardNumber: onlyNumber
     });
   };
+
+
+  // 화면에 표시할 때 4자리마다 띄어쓰기
 
   const formatCardNumber = (num) => {
     if (!num) return '';
@@ -75,7 +80,9 @@ export default function CardInput() {
     } catch (err) {
       setResult('VC 발급 실패');
     }
+
     setSigning(false);
+
   };
 
   return (
@@ -174,8 +181,10 @@ export default function CardInput() {
             />
           </label>
         </div>
+
         <button type="submit" style={{ marginTop: 20, width: '100%' }} disabled={signing}>
           {signing ? 'MetaMask 서명 중...' : '결제요청'}
+
         </button>
       </form>
       {result && (
