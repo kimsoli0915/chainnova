@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { ethers } from 'ethers';
-import { Circles } from 'react-loader-spinner'; // ✅ 로딩 스피너 추가
+import { Circles } from 'react-loader-spinner';
 
 export default function CardInput() {
   const [form, setForm] = useState({
@@ -13,8 +13,9 @@ export default function CardInput() {
     cardPassword: ''
   });
 
-  const [status, setStatus] = useState(null); // success | fail
-  const [loading, setLoading] = useState(false); // 로딩 상태
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
 
   const handleCardNumberChange = (e) => {
     const onlyNumber = e.target.value.replace(/\D/g, '').slice(0, 16);
@@ -32,8 +33,9 @@ export default function CardInput() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus(null);
     setLoading(true);
+    setDone(false);
+    setError('');
 
     try {
       const expiryDate = `${form.expiryMonth}/${form.expiryYear}`;
@@ -44,6 +46,7 @@ export default function CardInput() {
         cvc: form.cvc,
         cardPassword: form.cardPassword
       };
+
       const message = JSON.stringify(payload);
 
       if (!window.ethereum) {
@@ -52,26 +55,30 @@ export default function CardInput() {
         return;
       }
 
+      // 1. 지갑 연결 + 주소 가져오기
       await window.ethereum.request({ method: 'eth_requestAccounts' });
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
+
+      // 2. 메시지 서명
       const signature = await signer.signMessage(message);
 
+      // 3. 서버에 전송
       const res = await axios.post('http://localhost:3001/issue-vc', {
         ...payload,
-        walletAddress: userAddress,
+        userAddress,
         signature
       });
 
       if (res.status === 200) {
-        setStatus('success');
+        setDone(true);
       } else {
-        setStatus('fail');
+        setError('VC 발급 실패');
       }
     } catch (err) {
       console.error(err);
-      setStatus('fail');
+      setError('VC 발급 실패! 다시 시도해주세요.');
     }
 
     setLoading(false);
@@ -80,49 +87,100 @@ export default function CardInput() {
   return (
     <div style={{ maxWidth: 400, margin: '40px auto', padding: 24, background: '#f9f9f9', borderRadius: 8 }}>
       <h2>기본정보 입력</h2>
-
       <form onSubmit={handleSubmit}>
-        <label>생년월일(YYMMDD):<br/>
-          <input type="text" name="birth" maxLength={6} value={form.birth} onChange={handleChange} required style={{ width: '100%' }} />
-        </label><br/><br/>
+        <label>
+          생년월일(YYMMDD):
+          <input
+            type="text"
+            name="birth"
+            maxLength={6}
+            value={form.birth}
+            onChange={handleChange}
+            required
+            style={{ width: '100%' }}
+          />
+        </label>
+        <label>
+          카드 번호:
+          <input
+            type="text"
+            name="cardNumber"
+            value={formatCardNumber(form.cardNumber)}
+            onChange={handleCardNumberChange}
+            required
+            maxLength={19}
+            style={{ width: '100%' }}
+            inputMode="numeric"
+          />
+        </label>
+        <label>
+          유효기간:
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input
+              type="text"
+              name="expiryMonth"
+              placeholder="MM"
+              maxLength={2}
+              value={form.expiryMonth}
+              onChange={handleChange}
+              required
+              style={{ width: '100%' }}
+            />
+            <input
+              type="text"
+              name="expiryYear"
+              placeholder="YY"
+              maxLength={2}
+              value={form.expiryYear}
+              onChange={handleChange}
+              required
+              style={{ width: '100%' }}
+            />
+          </div>
+        </label>
+        <label>
+          CVC 번호:
+          <input
+            type="text"
+            name="cvc"
+            maxLength={4}
+            value={form.cvc}
+            onChange={handleChange}
+            required
+            style={{ width: '100%' }}
+            inputMode="numeric"
+          />
+        </label>
+        <label>
+          카드 비밀번호 (앞 2자리):
+          <input
+            type="password"
+            name="cardPassword"
+            maxLength={2}
+            value={form.cardPassword}
+            onChange={handleChange}
+            required
+            style={{ width: '100%' }}
+            inputMode="numeric"
+          />
+        </label>
 
-        <label>카드 번호:<br/>
-          <input type="text" name="cardNumber" maxLength={19} value={formatCardNumber(form.cardNumber)} onChange={handleCardNumberChange} required style={{ width: '100%' }} />
-        </label><br/><br/>
-
-        <label>유효기간:<br/>
-          <input type="text" name="expiryMonth" placeholder="MM" maxLength={2} value={form.expiryMonth} onChange={handleChange} required style={{ width: 60 }} />
-          /
-          <input type="text" name="expiryYear" placeholder="YY" maxLength={2} value={form.expiryYear} onChange={handleChange} required style={{ width: 60, marginLeft: 8 }} />
-        </label><br/><br/>
-
-        <label>CVC 번호:<br/>
-          <input type="text" name="cvc" maxLength={4} value={form.cvc} onChange={handleChange} required style={{ width: '100%' }} />
-        </label><br/><br/>
-
-        <label>카드 비밀번호 (앞 2자리):<br/>
-          <input type="password" name="cardPassword" maxLength={2} value={form.cardPassword} onChange={handleChange} required style={{ width: '100%' }} />
-        </label><br/><br/>
-
-        <button type="submit" disabled={loading} style={{ width: '100%', padding: 10 }}>
-          {loading ? '서명 요청 중...' : '결제요청'}
+        <button type="submit" disabled={loading} style={{ marginTop: 20, width: '100%' }}>
+          {loading ? 'VC 발급 중...' : '결제요청'}
         </button>
       </form>
 
-      {/* ✅ 로딩 스피너 */}
       {loading && (
         <div style={{ marginTop: 20, textAlign: 'center' }}>
-          <Circles height="50" width="50" color="#4fa94d" />
-          <p>VC 발급 중입니다...</p>
+          <Circles height="40" width="40" color="#4fa94d" visible={true} />
         </div>
       )}
 
-      {/* ✅ 결과 메시지 */}
-      {status === 'success' && (
-        <p style={{ marginTop: 20, color: 'green' }}>✅ VC 발급 완료!</p>
+      {done && !loading && (
+        <p style={{ color: 'green', marginTop: 20 }}>✅ VC 발급 완료!</p>
       )}
-      {status === 'fail' && (
-        <p style={{ marginTop: 20, color: 'red' }}>❌ VC 발급 실패! 다시 시도해주세요.</p>
+      {error && (
+        <p style={{ color: 'red', marginTop: 20 }}>❌ {error}</p>
       )}
     </div>
   );
