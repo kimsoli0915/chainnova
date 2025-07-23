@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const { ethers } = require('ethers')
 const crypto = require('crypto')
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
 const { createAgent } = require('@veramo/core')
 const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager')
@@ -51,11 +52,15 @@ app.post('/issue-vc', async (req, res) => {
     // 2. DID 발급 (임시)
     const issuer = await agent.didManagerCreate()
 
-    // 3. VC 생성
+    // 3. 만료일 설정 (6개월 뒤)
+    const expirationDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 6).toISOString()
+
+    // 4. VC 생성
     const vc = await agent.createVerifiableCredential({
       credential: {
         issuer: { id: issuer.did },
         issuanceDate: new Date().toISOString(),
+        expirationDate: expirationDate, // 추가됨
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         type: ['VerifiableCredential', 'CardCredential'],
         credentialSubject: {
@@ -71,40 +76,39 @@ app.post('/issue-vc', async (req, res) => {
       proofFormat: 'jwt'
     })
 
-    // 4. SHA-256 해시 생성
+    console.log("발급된 VC 전체:\n", JSON.stringify(vc, null, 2));
+    // 5. SHA-256 해시 생성
     const vcHash = crypto
       .createHash('sha256')
       .update(JSON.stringify(vc))
       .digest('hex')
 
-    // 5. 스마트 컨트랙트에 해시 등록
-    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3" // 배포 주소
+    // 6. 스마트 컨트랙트에 해시 등록
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
     const contractABI = [
       "function registerVC(bytes32 vcHash) external",
       "function isVCRegistered(bytes32 vcHash) view returns (bool)"
     ]
 
     const provider = new ethers.JsonRpcProvider("http://localhost:8545")
-
-    // ✅ Hardhat 테스트용 계정의 개인키 사용
     const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
     const signer = new ethers.Wallet(privateKey, provider)
-
     const contract = new ethers.Contract(contractAddress, contractABI, signer)
 
-    const vcHashBytes32 = "0x" + vcHash // bytes32로 변환
+    const vcHashBytes32 = "0x" + vcHash
     const tx = await contract.registerVC(vcHashBytes32)
     await tx.wait()
 
     console.log("✅ VC 해시 온체인 등록 완료:", tx.hash)
 
+    // 7. 서비스 제공자에게 VC 전송
     await fetch('http://localhost:3002/verify-vc', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ vc })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vc })
     })
 
-    // 6. VC와 해시 응답
+    // 8. VC와 해시 응답
     res.json({ vc, vcHash })
 
   } catch (err) {
@@ -114,5 +118,5 @@ app.post('/issue-vc', async (req, res) => {
 })
 
 app.listen(3001, () => {
-  console.log('✅ 백엔드 서버 실행: http://localhost:3001')
+  console.log('✅ 카드사 백엔드 실행: http://localhost:3001')
 })
