@@ -1,14 +1,8 @@
-<<<<<<< HEAD
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import { ethers } from 'ethers';
 import { Circles } from 'react-loader-spinner';
-=======
-import React, { useState } from 'react'
-import axios from 'axios'
-import { ethers } from 'ethers'
-import { Circles } from 'react-loader-spinner'
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
 
 export default function CardInput() {
   const [form, setForm] = useState({
@@ -18,36 +12,6 @@ export default function CardInput() {
     expiryYear: '',
     cvc: '',
     cardPassword: ''
-<<<<<<< HEAD
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleCardNumberChange = (e) => {
-    const onlyNumber = e.target.value.replace(/\D/g, '').slice(0, 16);
-    setForm({ ...form, cardNumber: onlyNumber });
-  };
-
-  const formatCardNumber = (num) => {
-    if (!num) return '';
-    return num.replace(/(.{4})/g, '$1 ').trim();
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setDone(false);
-    setError('');
-
-    try {
-      const expiryDate = `${form.expiryMonth}/${form.expiryYear}`;
-=======
   })
 
   const [loading, setLoading] = useState(false)
@@ -89,33 +53,12 @@ export default function CardInput() {
 
     try {
       const expiryDate = `${form.expiryMonth}/${form.expiryYear}`
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
       const payload = {
         birth: form.birth,
         cardNumber: form.cardNumber,
         expiryDate,
         cvc: form.cvc,
         cardPassword: form.cardPassword
-<<<<<<< HEAD
-      };
-
-      const message = JSON.stringify(payload);
-
-      if (!window.ethereum) {
-        alert('MetaMask가 설치되어 있지 않습니다.');
-        setLoading(false);
-        return;
-      }
-
-      // 1. 지갑 연결 + 주소 가져오기
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-
-      // 2. 메시지 서명
-      const signature = await signer.signMessage(message);
-=======
       }
 
       const message = JSON.stringify(payload)
@@ -134,36 +77,12 @@ export default function CardInput() {
 
       // 2. 메시지 서명
       const signature = await signer.signMessage(message)
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
 
       // 3. 서버에 전송
       const res = await axios.post('http://localhost:3001/issue-vc', {
         ...payload,
         userAddress,
         signature
-<<<<<<< HEAD
-      });
-
-      if (res.status === 200) {
-        setDone(true);
-      } else {
-        setError('VC 발급 실패');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('VC 발급 실패! 다시 시도해주세요.');
-    }
-
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ maxWidth: 400, margin: '40px auto', padding: 24, background: '#f9f9f9', borderRadius: 8 }}>
-      <h2>기본정보 입력</h2>
-      <form onSubmit={handleSubmit}>
-        <label>
-          생년월일(YYMMDD):
-=======
       })
 
       if (res.status === 200) {
@@ -203,35 +122,10 @@ export default function CardInput() {
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontWeight: '600', fontSize: 14 }}>생년월일(YYMMDD)</label>
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
           <input
             type="text"
             name="birth"
             maxLength={6}
-<<<<<<< HEAD
-            value={form.birth}
-            onChange={handleChange}
-            required
-            style={{ width: '100%' }}
-          />
-        </label>
-        <label>
-          카드 번호:
-          <input
-            type="text"
-            name="cardNumber"
-            value={formatCardNumber(form.cardNumber)}
-            onChange={handleCardNumberChange}
-            required
-            maxLength={19}
-            style={{ width: '100%' }}
-            inputMode="numeric"
-          />
-        </label>
-        <label>
-          유효기간:
-          <div style={{ display: 'flex', gap: '10px' }}>
-=======
             placeholder="예: 000101"
             value={form.birth}
             onChange={handleChange}
@@ -263,7 +157,6 @@ export default function CardInput() {
         <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
           <div style={{ flex: 1 }}>
             <label style={{ fontWeight: '600', fontSize: 14 }}>유효기간 (MM)</label>
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
             <input
               type="text"
               name="expiryMonth"
@@ -272,16 +165,11 @@ export default function CardInput() {
               value={form.expiryMonth}
               onChange={handleChange}
               required
-<<<<<<< HEAD
-              style={{ width: '100%' }}
-            />
-=======
               style={{ width: '100%', padding: '8px 10px', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
             />
           </div>
           <div style={{ flex: 1 }}>
             <label style={{ fontWeight: '600', fontSize: 14 }}>유효기간 (YY)</label>
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
             <input
               type="text"
               name="expiryYear"
@@ -290,14 +178,6 @@ export default function CardInput() {
               value={form.expiryYear}
               onChange={handleChange}
               required
-<<<<<<< HEAD
-              style={{ width: '100%' }}
-            />
-          </div>
-        </label>
-        <label>
-          CVC 번호:
-=======
               style={{ width: '100%', padding: '8px 10px', fontSize: 14, boxSizing: 'border-box', marginTop: 4 }}
             />
           </div>
@@ -305,35 +185,10 @@ export default function CardInput() {
 
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontWeight: '600', fontSize: 14 }}>CVC 번호</label>
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
           <input
             type="text"
             name="cvc"
             maxLength={4}
-<<<<<<< HEAD
-            value={form.cvc}
-            onChange={handleChange}
-            required
-            style={{ width: '100%' }}
-            inputMode="numeric"
-          />
-        </label>
-        <label>
-          카드 비밀번호 (앞 2자리):
-          <input
-            type="password"
-            name="cardPassword"
-            maxLength={2}
-            value={form.cardPassword}
-            onChange={handleChange}
-            required
-            style={{ width: '100%' }}
-            inputMode="numeric"
-          />
-        </label>
-
-        <button type="submit" disabled={loading} style={{ marginTop: 20, width: '100%' }}>
-=======
             placeholder="CVC"
             value={form.cvc}
             onChange={handleChange}
@@ -365,31 +220,22 @@ export default function CardInput() {
         </div>
 
         <button type="submit" disabled={loading} style={{ marginTop: 20, width: '100%', padding: '12px 0', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: 4, fontWeight: '600', fontSize: 16, cursor: 'pointer' }}>
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
           {loading ? 'VC 발급 중...' : '결제요청'}
         </button>
       </form>
 
       {loading && (
         <div style={{ marginTop: 20, textAlign: 'center' }}>
-<<<<<<< HEAD
-          <Circles height="40" width="40" color="#4fa94d" visible={true} />
-=======
           <Circles height="40" width="40" visible={true} />
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
         </div>
       )}
 
       {done && !loading && (
-        <p style={{ color: 'green', marginTop: 20 }}>✅ VC 발급 완료!</p>
+        <p style={{ color: 'green', marginTop: 20 }}>✅ VC 발급을 완료하여 검증 중입니다.</p>
       )}
       {error && (
         <p style={{ color: 'red', marginTop: 20 }}>❌ {error}</p>
       )}
     </div>
-<<<<<<< HEAD
-  );
-=======
   )
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
 }

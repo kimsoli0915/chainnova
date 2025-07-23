@@ -1,10 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const { ethers } = require('ethers')
-<<<<<<< HEAD
-=======
-const crypto = require('crypto') // SHA256 해시를 위한 모듈
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
+const crypto = require('crypto')
 
 const { createAgent } = require('@veramo/core')
 const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager')
@@ -18,11 +15,7 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-<<<<<<< HEAD
-// Veramo 에이전트
-=======
-// Veramo 에이전트 설정
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
+// Veramo agent 생성
 const agent = createAgent({
   plugins: [
     new KeyManager({
@@ -42,28 +35,23 @@ const agent = createAgent({
   ]
 })
 
-// VC 발급 API
+// VC 발급 및 온체인 등록
 app.post('/issue-vc', async (req, res) => {
   const { birth, cardNumber, expiryDate, cvc, cardPassword, signature, userAddress } = req.body
 
   try {
-<<<<<<< HEAD
-=======
-    // 클라이언트가 서명한 원본 메시지
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
     const message = JSON.stringify({ birth, cardNumber, expiryDate, cvc, cardPassword })
 
-    // MetaMask 서명 검증
+    // 1. 서명 검증
     const recoveredAddress = ethers.verifyMessage(message, signature)
     if (!recoveredAddress || recoveredAddress.toLowerCase() !== userAddress.toLowerCase()) {
       return res.status(400).json({ error: '서명 불일치' })
     }
-<<<<<<< HEAD
 
-    // issuer DID 생성
+    // 2. DID 발급 (임시)
     const issuer = await agent.didManagerCreate()
 
-    // VC 생성
+    // 3. VC 생성
     const vc = await agent.createVerifiableCredential({
       credential: {
         issuer: { id: issuer.did },
@@ -83,53 +71,44 @@ app.post('/issue-vc', async (req, res) => {
       proofFormat: 'jwt'
     })
 
-    res.json(vc)
-  } catch (err) {
-    console.error('VC 발급 실패:', err.message)
-    res.status(500).json({ error: 'VC 발급 중 오류 발생' })
-  }
-})
-
-app.listen(3001, () => {
-  console.log('✅ 백엔드 서버 실행: http://localhost:3001')
-})
-
-=======
-
-    // issuer DID 생성
-    const issuer = await agent.didManagerCreate()
-
-    // VC 생성
-    const vc = await agent.createVerifiableCredential({
-      credential: {
-        issuer: { id: issuer.did },
-        issuanceDate: new Date().toISOString(),
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        type: ['VerifiableCredential', 'CardCredential'],
-        credentialSubject: {
-          id: `did:ethr:${userAddress}`,
-          birth,
-          cardNumber,
-          expiryDate,
-          cvc,
-          cardPassword,
-          userSignature: signature
-        }
-      },
-      proofFormat: 'jwt'
-    })
-
-    // 생성된 VC의 SHA256 해시값 생성
+    // 4. SHA-256 해시 생성
     const vcHash = crypto
       .createHash('sha256')
       .update(JSON.stringify(vc))
       .digest('hex')
 
-    // VC와 VC 해시 함께 반환
+    // 5. 스마트 컨트랙트에 해시 등록
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3" // 배포 주소
+    const contractABI = [
+      "function registerVC(bytes32 vcHash) external",
+      "function isVCRegistered(bytes32 vcHash) view returns (bool)"
+    ]
+
+    const provider = new ethers.JsonRpcProvider("http://localhost:8545")
+
+    // ✅ Hardhat 테스트용 계정의 개인키 사용
+    const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    const signer = new ethers.Wallet(privateKey, provider)
+
+    const contract = new ethers.Contract(contractAddress, contractABI, signer)
+
+    const vcHashBytes32 = "0x" + vcHash // bytes32로 변환
+    const tx = await contract.registerVC(vcHashBytes32)
+    await tx.wait()
+
+    console.log("✅ VC 해시 온체인 등록 완료:", tx.hash)
+
+    await fetch('http://localhost:3002/verify-vc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vc })
+    })
+
+    // 6. VC와 해시 응답
     res.json({ vc, vcHash })
 
   } catch (err) {
-    console.error('VC 발급 실패:', err)
+    console.error('VC 발급 실패:', err.message, err.stack)
     res.status(500).json({ error: 'VC 발급 중 오류 발생' })
   }
 })
@@ -137,4 +116,3 @@ app.listen(3001, () => {
 app.listen(3001, () => {
   console.log('✅ 백엔드 서버 실행: http://localhost:3001')
 })
->>>>>>> c6fd206b3c2283f0b2cded1df6c90385aefb76f2
