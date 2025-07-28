@@ -13,11 +13,11 @@ function PaymentIntro() {
         취소할 때까지 요금제가 30일마다 자동 갱신됩니다.
       </p>
       <button
-        onClick={() => navigate('/card-select')}
+        onClick={() => navigate('/card-input')}
         className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded transition-colors"
         type="button"
       >
-        Nova Pay로 결제
+        NovaPay 테스트 결제해보기
       </button>
     </div>
   );
