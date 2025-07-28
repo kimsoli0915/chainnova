@@ -38,10 +38,10 @@ const agent = createAgent({
 
 // VC 발급 및 온체인 등록
 app.post('/issue-vc', async (req, res) => {
-  const { birth, cardNumber, expiryDate, cvc, cardPassword, signature, userAddress } = req.body
+  const { userAddress, signature } = req.body
 
   try {
-    const message = JSON.stringify({ birth, cardNumber, expiryDate, cvc, cardPassword })
+    const message = JSON.stringify({ userAddress })
 
     // 1. 서명 검증
     const recoveredAddress = ethers.verifyMessage(message, signature)
@@ -52,8 +52,8 @@ app.post('/issue-vc', async (req, res) => {
     // 2. DID 발급 (임시)
     const issuer = await agent.didManagerCreate()
 
-    // 3. 만료일 설정 (6개월 뒤)
-    const expirationDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 6).toISOString()
+    // 3. 만료일 설정 (5분)
+    const expirationDate = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
     // 4. VC 생성
     const vc = await agent.createVerifiableCredential({
@@ -65,12 +65,8 @@ app.post('/issue-vc', async (req, res) => {
         type: ['VerifiableCredential', 'CardCredential'],
         credentialSubject: {
           id: `did:ethr:${userAddress}`,
-          birth,
-          cardNumber,
-          expiryDate,
-          cvc,
-          cardPassword,
-          userSignature: signature
+          paymentPurpose: "ChainNova 서비스 결제에 동의함",
+          allowedUse: "once"
         }
       },
       proofFormat: 'jwt'

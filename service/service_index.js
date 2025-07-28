@@ -8,10 +8,13 @@ const { getResolver } = require('key-did-resolver');
 const crypto = require('crypto');
 const { ethers } = require('ethers');
 require('dotenv').config(); // ✅ .env 파일에서 private key 불러오기
+const paymentRouter = require('./payment')
 
+const secretKey = process.env.TOSS_SECRET_KEY
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/', paymentRouter)
 
 // ✅ Veramo Agent 생성
 const agent = createAgent({
@@ -51,7 +54,7 @@ app.post('/verify-vc', async (req, res) => {
       return res.status(400).json({ verified: false, message: "❌ VC is invalid" });
     }
 
-    // 2. ⏰ VC 만료일 확인 (JWT payload의 exp claim)
+    // 2. VC 만료일 확인 (JWT payload의 exp claim)
     const jwt = vc.proof?.jwt;
     if (jwt) {
       const payload = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
