@@ -35,6 +35,9 @@ const PaymentCompletePage = () => {
     if (vcRaw) {
       setVcInfo(JSON.parse(vcRaw));
     }
+
+    // ✅ URL 쿼리스트링 제거 (주소창만 바꾸기)
+    window.history.replaceState({}, document.title, "/paymentresult");
   }, []);
 
   const handleShowVC = () => {

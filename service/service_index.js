@@ -1,3 +1,5 @@
+require('dotenv').config({ path: __dirname + '/.env' });
+
 const express = require('express');
 const cors = require('cors');
 const { createAgent } = require('@veramo/core');
@@ -7,7 +9,7 @@ const { Resolver } = require('did-resolver');
 const { getResolver } = require('key-did-resolver');
 const crypto = require('crypto');
 const { ethers } = require('ethers');
-require('dotenv').config(); // ✅ .env 파일에서 private key 불러오기
+
 const paymentRouter = require('./payment')
 
 const secretKey = process.env.TOSS_SECRET_KEY
@@ -29,7 +31,7 @@ const agent = createAgent({
 });
 
 // ✅ 스마트컨트랙트 설정
-const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // 실제 배포 주소로 변경
+const contractAddress = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 const contractABI = [
   "function isVCRegistered(bytes32 vcHash) view returns (bool)",
   "function isVCUsed(bytes32 vcHash) view returns (bool)",
@@ -37,8 +39,12 @@ const contractABI = [
 ];
 
 // ✅ signer 명시 설정 (Hardhat 계정 또는 환경변수 사용)
+if (!process.env.PRIVATE_KEY) {
+  throw new Error("❌ PRIVATE_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.");
+}
+
 const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-const privateKey = process.env.PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const privateKey = process.env.PRIVATE_KEY;
 const signer = new ethers.Wallet(privateKey, provider);
 const contract = new ethers.Contract(contractAddress, contractABI, signer);
 

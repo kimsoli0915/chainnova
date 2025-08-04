@@ -1,3 +1,4 @@
+require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express')
 const cors = require('cors')
 const { ethers } = require('ethers')
@@ -86,8 +87,12 @@ app.post('/issue-vc', async (req, res) => {
       "function isVCRegistered(bytes32 vcHash) view returns (bool)"
     ]
 
+    if (!process.env.PRIVATE_KEY) {
+  throw new Error("❌ PRIVATE_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.");
+    }
+
     const provider = new ethers.JsonRpcProvider("http://localhost:8545")
-    const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+    const privateKey = process.env.PRIVATE_KEY
     const signer = new ethers.Wallet(privateKey, provider)
     const contract = new ethers.Contract(contractAddress, contractABI, signer)
 
