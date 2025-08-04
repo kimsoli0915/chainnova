@@ -37,6 +37,14 @@ export default function CardInput() {
       })
 
       if (res.status === 200) {
+        const vcData = res.data.vc
+        const issuedAt = new Date()
+        const expirationDate = new Date(issuedAt.getTime() + 5 * 60 * 1000) // 5분 후
+
+        // ✅ VC와 만료시간을 localStorage에 저장
+        localStorage.setItem('vc', JSON.stringify(vcData))
+        localStorage.setItem('vc_exp', expirationDate.toISOString())
+
         setDone(true)
         setNextStepReady(true)
       } else {
@@ -52,14 +60,14 @@ export default function CardInput() {
 
   // ✅ 2. Toss 결제 요청 함수
   const handleTossPayment = () => {
-    const tossPayments = window.TossPayments('test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN') // 🔁 너의 Toss 테스트 clientKey로 교체
+    const tossPayments = window.TossPayments('test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN')
 
     tossPayments.requestPayment('카드', {
       amount: 10000,
       orderId: 'order-' + Date.now(),
       orderName: 'ChainNova VC 결제',
       customerName: '홍길동',
-      successUrl: 'http://localhost:3000/success',
+      successUrl: 'http://localhost:3000/paymentresult', // ✅ 성공 시 이동
       failUrl: 'http://localhost:3000/fail',
     }).catch((error) => {
       if (error.code === 'USER_CANCEL') {
