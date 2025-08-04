@@ -59,24 +59,27 @@ export default function CardInput() {
   }
 
   // ✅ 2. Toss 결제 요청 함수
-  const handleTossPayment = () => {
-    const tossPayments = window.TossPayments('test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN')
+const handleTossPayment = () => {
+  const tossPayments = window.TossPayments('test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN')
 
-    tossPayments.requestPayment('카드', {
-      amount: 10000,
-      orderId: 'order-' + Date.now(),
-      orderName: 'ChainNova VC 결제',
-      customerName: '홍길동',
-      successUrl: 'http://localhost:3000/paymentresult', // ✅ 성공 시 이동
-      failUrl: 'http://localhost:3000/fail',
-    }).catch((error) => {
-      if (error.code === 'USER_CANCEL') {
-        alert('❌ 사용자가 결제를 취소했습니다.')
-      } else {
-        alert('❌ 결제 오류: ' + error.message)
-      }
-    })
-  }
+  const orderId = 'order-' + Date.now()
+  const amount = 10000
+
+  tossPayments.requestPayment('카드', {
+    amount,
+    orderId,
+    orderName: 'ChainNova VC 결제',
+    customerName: '홍길동',
+    successUrl: `http://localhost:3000/paymentresult?orderId=${orderId}&amount=${amount}`,
+    failUrl: 'http://localhost:3000/fail',
+  }).catch((error) => {
+    if (error.code === 'USER_CANCEL') {
+      alert('❌ 사용자가 결제를 취소했습니다.')
+    } else {
+      alert('❌ 결제 오류: ' + error.message)
+    }
+  })
+}
 
   return (
     <div
