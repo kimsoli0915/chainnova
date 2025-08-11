@@ -33,17 +33,21 @@ export default function CardInput() {
 
       const res = await axios.post('http://localhost:3001/issue-vc', {
         userAddress,
-        signature
+        signature,
       })
 
       if (res.status === 200) {
         const vcData = res.data.vc
-        const issuedAt = new Date()
-        const expirationDate = new Date(issuedAt.getTime() + 5 * 60 * 1000) // 5분 후
 
-        // ✅ VC와 만료시간을 localStorage에 저장
+        // ✅ 변경점: 프론트에서 만료시간을 새로 계산하지 않음(삭제)
+        //    - 서버가 VC 안에 넣어준 expirationDate만 신뢰/사용
         localStorage.setItem('vc', JSON.stringify(vcData))
-        localStorage.setItem('vc_exp', expirationDate.toISOString())
+        if (vcData?.expirationDate) {
+          localStorage.setItem('vc_exp', vcData.expirationDate)
+        } else {
+          // expirationDate가 없다면 UI상에서 안내만
+          localStorage.removeItem('vc_exp')
+        }
 
         setDone(true)
         setNextStepReady(true)
@@ -52,34 +56,36 @@ export default function CardInput() {
       }
     } catch (err) {
       console.error(err)
-      setError(err.response?.data?.error || 'VC 발급 실패! 다시 시도해주세요.')
+      setError(err?.response?.data?.error || 'VC 발급 실패! 다시 시도해주세요.')
     }
 
     setLoading(false)
   }
 
   // ✅ 2. Toss 결제 요청 함수
-const handleTossPayment = () => {
-  const tossPayments = window.TossPayments('test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN')
+  const handleTossPayment = () => {
+    const tossPayments = window.TossPayments('test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN')
 
-  const orderId = 'order-' + Date.now()
-  const amount = 10000
+    const orderId = 'order-' + Date.now()
+    const amount = 10000
 
-  tossPayments.requestPayment('카드', {
-    amount,
-    orderId,
-    orderName: 'ChainNova VC 결제',
-    customerName: '홍길동',
-    successUrl: `http://localhost:3000/paymentresult?orderId=${orderId}&amount=${amount}`,
-    failUrl: 'http://localhost:3000/fail',
-  }).catch((error) => {
-    if (error.code === 'USER_CANCEL') {
-      alert('❌ 사용자가 결제를 취소했습니다.')
-    } else {
-      alert('❌ 결제 오류: ' + error.message)
-    }
-  })
-}
+    tossPayments
+      .requestPayment('카드', {
+        amount,
+        orderId,
+        orderName: 'ChainNova VC 결제',
+        customerName: '홍길동',
+        successUrl: `http://localhost:3000/paymentresult?orderId=${orderId}&amount=${amount}`,
+        failUrl: 'http://localhost:3000/fail',
+      })
+      .catch((error) => {
+        if (error.code === 'USER_CANCEL') {
+          alert('❌ 사용자가 결제를 취소했습니다.')
+        } else {
+          alert('❌ 결제 오류: ' + error.message)
+        }
+      })
+  }
 
   return (
     <div
@@ -89,15 +95,13 @@ const handleTossPayment = () => {
         padding: 24,
         background: '#f9f9f9',
         borderRadius: 8,
-        fontFamily: 'sans-serif'
+        fontFamily: 'sans-serif',
       }}
     >
-      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>
-        ChainNova 결제 시스템
-      </h1>
+      <h1 style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>ChainNova 결제 시스템</h1>
 
       <ul style={{ fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
-        <li>• VC 유효시간: 서명 시점으로부터 5분</li>
+        <li>• VC 유효시간: 서버 발급 시점 기준(예: 5분)</li>
         <li>• VC 사용조건: 1회 사용 후 자동 폐기</li>
       </ul>
 
@@ -106,9 +110,7 @@ const handleTossPayment = () => {
         <br />
         (VC는 Toss 결제 요청의 보안 조건 검증에 사용됩니다)
       </p>
-      <p style={{ fontSize: 15 }}>
-        ✔ VC 발급 후 자동으로 유효성 검증을 수행합니다.
-      </p>
+      <p style={{ fontSize: 15 }}>✔ VC 발급 후 자동으로 유효성 검증을 수행합니다.</p>
 
       {!done && (
         <button
@@ -124,7 +126,7 @@ const handleTossPayment = () => {
             borderRadius: 4,
             fontWeight: '600',
             fontSize: 16,
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           {loading ? '서명 요청 중...' : '다음'}
@@ -139,9 +141,7 @@ const handleTossPayment = () => {
 
       {done && !loading && (
         <div style={{ marginTop: 20 }}>
-          <p style={{ color: 'green' }}>
-            ✅ VC 발급을 완료 후 검증 되었습니다.
-          </p>
+          <p style={{ color: 'green' }}>✅ VC 발급을 완료 후 검증 되었습니다.</p>
           {nextStepReady && (
             <button
               onClick={handleTossPayment}
@@ -155,7 +155,7 @@ const handleTossPayment = () => {
                 borderRadius: 4,
                 fontWeight: '600',
                 fontSize: 16,
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               결제 요청
@@ -164,9 +164,7 @@ const handleTossPayment = () => {
         </div>
       )}
 
-      {error && (
-        <p style={{ color: 'red', marginTop: 20 }}>❌ {error}</p>
-      )}
+      {error && <p style={{ color: 'red', marginTop: 20 }}>❌ {error}</p>}
     </div>
   )
 }
