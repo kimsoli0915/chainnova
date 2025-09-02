@@ -54,7 +54,7 @@ app.post('/issue-vc', async (req, res) => {
     const issuer = await agent.didManagerCreate()
 
     // 3. 만료일 설정 (5분)
-    const expirationDate = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+    const expirationDate = new Date(Date.now() + 2 * 60 * 1000).toISOString()
 
     // 4. VC 생성
     const vc = await agent.createVerifiableCredential({
