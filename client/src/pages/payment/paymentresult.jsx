@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+// client/src/pages/payment/paymentresult.jsx
+import React, { useEffect, useState, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:3002';
-const SUCCESS_TEXT = '결제가 성공적으로 승인되었습니다!';
+const SUCCESS_TEXT = 'PAYMENT SUCCESSFUL';
 
 export default function PaymentResultPage() {
   const [status, setStatus] = useState('결제 승인 중...');
@@ -12,7 +13,13 @@ export default function PaymentResultPage() {
   const [txHash, setTxHash] = useState('');
   const [usedAt, setUsedAt] = useState('');
 
+  const [showVCPopup, setShowVCPopup] = useState(false);
+  const didRun = useRef(false);
+
   useEffect(() => {
+    if (didRun.current) return;
+    didRun.current = true;
+
     (async () => {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -33,114 +40,201 @@ export default function PaymentResultPage() {
           body: JSON.stringify({ paymentKey, orderId, amount, vc }),
         });
 
-        let data = null;
-        try { data = await res.json(); } catch (_) { /* 빈 본문 대비 */ }
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (_) {}
 
-        // HTTP 레벨
-        if (!res.ok) {
-          const msg = data?.error || data?.message || `HTTP ${res.status}`;
-          throw new Error(msg);
-        }
+        if (!res.ok) throw new Error(data?.error || data?.message || `HTTP ${res.status}`);
+        if (!data?.ok) throw new Error(data?.error || data?.message || '알 수 없는 오류');
 
-        // 비즈니스 레벨(ok 플래그)
-        if (!data?.ok) {
-          const reason = data?.error || data?.message || '알 수 없는 오류';
-          throw new Error(reason);
-        }
-
-        // ===== 성공 처리 =====
         setStatus(SUCCESS_TEXT);
-        setDetail(data?.message || '승인 완료');
+        setDetail("");
 
-        // 현재 시각(표시용)
         const now = new Date();
-        setCurrentTime(now.toLocaleString('ko-KR', {
-          year: 'numeric', month: '2-digit', day: '2-digit',
-          hour: '2-digit', minute: '2-digit'
-        }));
+        setCurrentTime(
+          now.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        );
 
-        // VC 만료 표시용 (서버가 내려준 expirationDate만 신뢰)
         const exp = localStorage.getItem('vc_exp');
         if (exp) {
-          const expFormatted = new Date(exp).toLocaleString('ko-KR', {
-            year: 'numeric', month: '2-digit', day: '2-digit',
-            hour: '2-digit', minute: '2-digit',
-          });
-          setVcExpirationDate(expFormatted);
-        } else {
-          setVcExpirationDate('');
+          setVcExpirationDate(
+            new Date(exp).toLocaleString('ko-KR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          );
         }
 
         setVcInfo(vc);
         if (data?.txHash) setTxHash(data.txHash);
         if (data?.usedAt) {
-          try {
-            setUsedAt(new Date(data.usedAt).toLocaleString('ko-KR', {
-              year: 'numeric', month: '2-digit', day: '2-digit',
-              hour: '2-digit', minute: '2-digit',
-            }));
-          } catch { /* noop */ }
+          setUsedAt(
+            new Date(data.usedAt).toLocaleString('ko-KR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          );
         }
       } catch (e) {
         setStatus('결제 실패');
         setDetail(e?.message || '알 수 없는 오류');
       } finally {
-        // URL 정리 (새로고침 시 중복 승인 방지)
         window.history.replaceState({}, document.title, '/paymentresult');
       }
     })();
   }, []);
 
-  const handleShowVC = () => {
-    if (vcInfo?.credentialSubject) {
-      const cs = vcInfo.credentialSubject;
-      alert(
-        `내 VC 정보\n\n` +
-        `DID: ${cs.id}\n` +
-        `용도: ${cs.paymentPurpose}\n` +
-        `사용 조건: ${cs.allowedUse}`
-      );
-    } else {
-      alert('VC 정보를 불러올 수 없습니다.');
-    }
-  };
-
   return (
-    <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-2xl shadow-lg text-center font-sans">
-      <h2 className="text-2xl font-bold mb-2">{status}</h2>
-      {detail && <p className="text-gray-600 mb-6">{detail}</p>}
+    <div className="page">
+      <header className="header">
+        <div className="brand">CHAINNOVA</div>
+        {/* <button className="main-btn" onClick={() => (window.location.href = '/')}>MAIN</button> */}
+      </header>
 
-      {status === SUCCESS_TEXT && (
-        <div className="text-left text-gray-700 space-y-2">
-          <p><strong>결제 금액:</strong> 10,000원</p>
-          <p><strong>결제 일시:</strong> {currentTime}</p>
-          {usedAt && <p><strong>VC 사용 시각:</strong> {usedAt}</p>}
-          <p><strong>VC 만료시간:</strong> {vcExpirationDate || '정보 없음'}</p>
-          {txHash && (
-            <p className="break-all">
-              <strong>Tx Hash:</strong> {txHash}
-            </p>
+      <main className="container">
+        {/* ✅ 체크 애니메이션 (성공시에만 노출) */}
+        {status === SUCCESS_TEXT && (
+          <div className="check-hero" aria-hidden>
+            <svg className="checkmark" viewBox="0 0 52 52">
+              <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+              <path className="checkmark-check" fill="none" d="M14 27l7 7 16-16" />
+            </svg>
+          </div>
+        )}
+
+        {/* 텍스트를 체크 아래로 내려서 배치 */}
+        <h2 className="status">{status}</h2>
+        {detail && <p className="detail">{detail}</p>}
+
+        {status === SUCCESS_TEXT && (
+          <div className="info">
+            <p><strong>결제 금액:</strong> 10,000원</p>
+            <p><strong>결제 일시:</strong> {currentTime}</p>
+            {usedAt && <p><strong>VC 사용 시각:</strong> {usedAt}</p>}
+            <p><strong>VC 만료시간:</strong> {vcExpirationDate || '정보 없음'}</p>
+            {txHash && <p><strong>Tx Hash:</strong> {txHash}</p>}
+          </div>
+        )}
+
+        <div className="btn-group">
+          {vcInfo && status === SUCCESS_TEXT && (
+            <button className="pink-btn" onClick={() => setShowVCPopup(true)}>내 VC 보기</button>
           )}
+          <button className="outline-btn" onClick={() => (window.location.href = '/')}>메인으로 돌아가기</button>
+        </div>
+      </main>
+
+      {showVCPopup && (
+        <div className="modal-backdrop" onClick={() => setShowVCPopup(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>결제하기 &gt; 내 VC 보기</h3>
+              <button className="close-btn" onClick={() => setShowVCPopup(false)}>X</button>
+            </div>
+            {vcInfo?.credentialSubject ? (
+              <div className="modal-body">
+                <p><strong>DID:</strong> {vcInfo.credentialSubject.id}</p>
+                {vcInfo.credentialSubject.paymentPurpose && (
+                  <p><strong>용도:</strong> {vcInfo.credentialSubject.paymentPurpose}</p>
+                )}
+                {vcInfo.credentialSubject.allowedUse && (
+                  <p><strong>사용 조건:</strong> {vcInfo.credentialSubject.allowedUse}</p>
+                )}
+              </div>
+            ) : (
+              <p className="modal-body">VC 정보를 불러올 수 없습니다.</p>
+            )}
+            <div className="modal-footer">
+              <button className="pink-btn" onClick={() => setShowVCPopup(false)}>확인</button>
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="mt-8 space-y-3">
-        {vcInfo && status === SUCCESS_TEXT && (
-          <button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-lg"
-            onClick={handleShowVC}
-          >
-            내 VC 확인하기
-          </button>
-        )}
+      {/* CSS */}
+      <style>{`
+        :root {
+          --pink: #ff2d86; /* 브랜드 핑크 - 체크 색상도 동일 */
+          --bg: #0b0b0e;
+          --panel: #1a1a1d;
+          --text: #ffffff;
+          --muted: #aaaaaa;
+          --border: rgba(255,255,255,0.18);
+        }
 
-        <button
-          className="w-full border border-gray-300 hover:bg-gray-100 text-gray-800 py-2 px-4 rounded-xl text-lg"
-          onClick={() => (window.location.href = '/')}
-        >
-          메인으로 돌아가기
-        </button>
-      </div>
+        .page { min-height: 100vh; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif; }
+        .header { display:flex; justify-content:space-between; align-items:center; padding:16px;}
+        .brand { font-weight:800; font-size:18px; color: var(--pink); letter-spacing: .04em; }
+        .main-btn { background:transparent; color:var(--text); border:1px solid var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
+
+        .container {
+          max-width: 760px;
+          margin: 40px auto 60px;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 18px;
+          padding: 40px 28px 30px;
+          box-shadow: 0 10px 40px rgba(0,0,0,.45);
+          text-align: center;
+        }
+
+        /* ✅ 체크 애니메이션: 위쪽 중앙 */
+        .check-hero {
+          display:flex; align-items:center; justify-content:center;
+          margin: 8px auto 18px; /* 텍스트를 아래로 조금 내리기 */
+        }
+        .checkmark { width: 90px; height: 90px; }
+        .checkmark-circle {
+          stroke-dasharray: 300;
+          stroke-dashoffset: 300;
+          stroke-width: 3;
+          stroke: var(--pink);
+          fill: none;
+          animation: stroke 0.7s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        .checkmark-check {
+          stroke-dasharray: 70;
+          stroke-dashoffset: 70;
+          stroke: var(--pink);
+          stroke-width: 3;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          animation: stroke 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.75s forwards;
+        }
+        @keyframes stroke { to { stroke-dashoffset: 0; } }
+
+        .status { font-size: clamp(25px, 4.6vw, 48px); font-weight: 800; margin: 6px 0 6px; letter-spacing: .02em; }
+        .detail { color: var(--muted); margin-bottom: 16px; }
+
+        .info { text-align:left; margin: 22px auto 4px; line-height:1.75; max-width: 520px; }
+        .info strong { color: #e7e7e7; font-weight: 700; }
+
+        .btn-group { display:flex; gap:12px; justify-content:center; margin-top: 18px; flex-wrap: wrap; }
+        .pink-btn { background: var(--pink); border:none; padding:10px 20px; border-radius:999px; color:white; font-weight:800; cursor:pointer; letter-spacing:.02em; }
+        .pink-btn:hover { opacity:0.92; }
+        .outline-btn { background:transparent; border:1px solid white; padding:10px 20px; border-radius:999px; color:white; cursor:pointer; font-weight:700; }
+        .outline-btn:hover { background:white; color: var(--bg); }
+
+        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; }
+        .modal { background: var(--panel); padding:20px; border-radius:12px; max-width:600px; width:90%; border:1px solid var(--border); }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .close-btn { background:transparent; border:none; color:white; cursor:pointer; font-size:16px; }
+        .modal-body { margin-bottom:16px; line-height:1.6; word-break: break-all; }
+        .modal-footer { text-align:right; }
+      `}</style>
     </div>
   );
 }

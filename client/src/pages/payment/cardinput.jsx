@@ -74,7 +74,6 @@ export default function CardInput() {
         amount,
         orderId,
         orderName: 'ChainNova VC 결제',
-        customerName: '홍길동',
         successUrl: `http://localhost:3000/paymentresult?orderId=${orderId}&amount=${amount}`,
         failUrl: 'http://localhost:3000/fail',
       })
