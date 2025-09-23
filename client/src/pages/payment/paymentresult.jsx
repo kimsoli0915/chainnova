@@ -142,7 +142,6 @@ export default function PaymentResultPage() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>결제하기 &gt; 내 VC 보기</h3>
-              <button className="close-btn" onClick={() => setShowVCPopup(false)}>X</button>
             </div>
             {vcInfo?.credentialSubject ? (
               <div className="modal-body">
@@ -164,6 +163,17 @@ export default function PaymentResultPage() {
         </div>
       )}
 
+            {/* 푸터 */}
+<footer className="nv-footer">
+  <strong className="footer-about">About</strong>
+  <div className="footer-names">
+    김솔리 · 박선영 · 김예원 · 김채현
+  </div>
+  <div className="footer-desc">
+    Designed &amp; Developed by students of the Department of Information Security, Seoul Women's University
+  </div>
+</footer>
+
       {/* CSS */}
       <style>{`
         :root {
@@ -175,20 +185,20 @@ export default function PaymentResultPage() {
           --border: rgba(255,255,255,0.18);
         }
 
-        .page { min-height: 100vh; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif; }
+        .page{min-height:100vh;background: var(--bg);color: var(--text);font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;display:flex;flex-direction:column;}
         .header { display:flex; justify-content:space-between; align-items:center; padding:16px;}
         .brand { font-weight:800; font-size:18px; color: var(--pink); letter-spacing: .04em; }
         .main-btn { background:transparent; color:var(--text); border:1px solid var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
 
-        .container {
-          max-width: 760px;
-          margin: 40px auto 60px;
+        .container{
+          max-width:760px;
+          margin: auto;        
           background: var(--panel);
           border: 1px solid var(--border);
           border-radius: 18px;
           padding: 40px 28px 30px;
           box-shadow: 0 10px 40px rgba(0,0,0,.45);
-          text-align: center;
+          text-align:center;
         }
 
         /* ✅ 체크 애니메이션: 위쪽 중앙 */
@@ -222,7 +232,7 @@ export default function PaymentResultPage() {
         .info { text-align:left; margin: 22px auto 4px; line-height:1.75; max-width: 520px; }
         .info strong { color: #e7e7e7; font-weight: 700; }
 
-        .btn-group { display:flex; gap:12px; justify-content:center; margin-top: 18px; flex-wrap: wrap; }
+        .btn-group { display:flex; gap:12px; justify-content:center; margin-top: 30px; flex-wrap: wrap; }
         .pink-btn { background: var(--pink); border:none; padding:10px 20px; border-radius:999px; color:white; font-weight:800; cursor:pointer; letter-spacing:.02em; }
         .pink-btn:hover { opacity:0.92; }
         .outline-btn { background:transparent; border:1px solid white; padding:10px 20px; border-radius:999px; color:white; cursor:pointer; font-weight:700; }
@@ -230,10 +240,16 @@ export default function PaymentResultPage() {
 
         .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; }
         .modal { background: var(--panel); padding:20px; border-radius:12px; max-width:600px; width:90%; border:1px solid var(--border); }
-        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-top: 0; margin-bottom:12px; }
         .close-btn { background:transparent; border:none; color:white; cursor:pointer; font-size:16px; }
         .modal-body { margin-bottom:16px; line-height:1.6; word-break: break-all; }
         .modal-footer { text-align:right; }
+        .modal-header h3 {font-weight: 1000; margin-top: -4px;}
+
+        .footer-about {font-size: 17px;font-weight: 900;display: block;margin-bottom: 6px;}
+        .footer-names {font-size: 14px;margin-bottom: 6px;}
+        .footer-desc {font-size: 13px;color: #9ca3af;line-height: 1.4;white-space: nowrap;}
+        .nv-footer {position: fixed; left: 30px; bottom: 24px; text-align: left;max-width: 520px;z-index: 1;}
       `}</style>
     </div>
   );
