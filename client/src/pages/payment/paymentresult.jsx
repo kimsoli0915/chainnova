@@ -186,8 +186,8 @@ export default function PaymentResultPage() {
         }
 
         .page{min-height:100vh;background: var(--bg);color: var(--text);font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans KR','Apple SD Gothic Neo',sans-serif;display:flex;flex-direction:column;}
-        .header { display:flex; justify-content:space-between; align-items:center; padding:16px;}
-        .brand { font-weight:800; font-size:18px; color: var(--pink); letter-spacing: .04em; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 16px; }
+        .brand { font-size: 20px; font-weight: 700; letter-spacing: .04em; background: linear-gradient(90deg, #ec4899, #fb7185); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .main-btn { background:transparent; color:var(--text); border:1px solid var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
 
         .container{

@@ -7,7 +7,7 @@ function IconPlay(props) {
     <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
       <path d="M8 5v14l11-7z" fill="currentColor" />
     </svg>
-  );
+  )
 }
 function IconUsers(props) {
   return (
@@ -128,9 +128,7 @@ export default function PaymentIntro() {
   .nv-main{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;padding:48px 24px 72px}
   .hero{text-align:center;margin-bottom:48px}
   .hero-sub{margin:0 0 32px;color:#d1d5db;font-weight:300;letter-spacing:.2em;font-size:18px}
-  .logo-wrap{position:relative;margin-bottom:44px}
-  .logo-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;user-select:none}
-  .logo-bg img{width:320px;height:320px;object-fit:contain;opacity:.3;filter:blur(1px)}
+  
   .novapay-text{position:relative;z-index:1;font-weight:900;letter-spacing:.08em;font-size:clamp(55px, 10vw, 130px)}
   .text-nova{background:linear-gradient(90deg,var(--pink1),var(--pink3),var(--pink1));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 20px rgba(236,72,153,.25)}
   .text-pay{
@@ -226,7 +224,7 @@ export default function PaymentIntro() {
           {/* 로고 배경 + 텍스트 */}
           <div className="logo-wrap">
             <div className="logo-bg">
-              <img src="/images/novapay-logo.png" alt="NovaPay Logo" />
+             
             </div>
             <div className="novapay-text">
               <span className="text-nova">NOVA</span>
