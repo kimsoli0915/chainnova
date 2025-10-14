@@ -1,3 +1,4 @@
+// 환경설정 & 기본 의존성 로딩
 require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express')
 const cors = require('cors')
@@ -5,13 +6,15 @@ const { ethers } = require('ethers')
 const crypto = require('crypto')
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args))
 
+// Veramo 관련 모듈 로딩 (DID/키/VC 발급 플러그인)
 const { createAgent } = require('@veramo/core')
-const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager')
-const { DIDManager, MemoryDIDStore } = require('@veramo/did-manager')
-const { KeyDIDProvider } = require('@veramo/did-provider-key')
+const { KeyManager, MemoryKeyStore, MemoryPrivateKeyStore } = require('@veramo/key-manager') // 키 생성/저장/회전 담당
+const { DIDManager, MemoryDIDStore } = require('@veramo/did-manager') // DID 생성·관리
+const { KeyDIDProvider } = require('@veramo/did-provider-key') // did:key를 실제로 만들 때 사용하는 Provider
 const { KeyManagementSystem } = require('@veramo/kms-local')
-const { CredentialIssuer } = require('@veramo/credential-w3c')
+const { CredentialIssuer } = require('@veramo/credential-w3c') // VC 발급 기능을 제공
 
+// 브라우저에서 들어오는 모든 요청이 정상적으로 읽히고, 처리될 수 있는 서버 만드는 과정 
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -54,14 +57,14 @@ app.post('/issue-vc', async (req, res) => {
     const issuer = await agent.didManagerCreate()
 
     // 3. 만료일 설정 (5분)
-    const expirationDate = new Date(Date.now() + 2 * 60 * 1000).toISOString()
+    const expirationDate = new Date(Date.now() + 5 * 60 * 1000).toISOString()
 
     // 4. VC 생성
     const vc = await agent.createVerifiableCredential({
       credential: {
         issuer: { id: issuer.did },
         issuanceDate: new Date().toISOString(),
-        expirationDate: expirationDate, // 추가됨
+        expirationDate: expirationDate, 
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         type: ['VerifiableCredential', 'CardCredential'],
         credentialSubject: {

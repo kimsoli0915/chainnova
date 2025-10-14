@@ -1,3 +1,4 @@
+// 기본 설정
 import React, { useState } from "react";
 import axios from "axios";
 import { ethers } from "ethers";
@@ -8,8 +9,9 @@ export default function CardInput() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const [nextStepReady, setNextStepReady] = useState(false);
-  const [currentStep, setCurrentStep] = useState("idle"); // "idle" | "metamask" | "vc-issuing" | "blockchain" | "completed"
-
+  const [currentStep, setCurrentStep] = useState("idle");
+  
+// VC 발급 및 DID 서명; 사용자가 메타마스크로 로그인하고, 자신의 지갑 주소로 서명한 뒤 그 서명 결과를 서버에 보내서 VC 발급 요청
   const handleSignAndIssue = async () => {
     setLoading(true);
     setError("");
@@ -39,7 +41,7 @@ export default function CardInput() {
         userAddress,
         signature,
       });
-
+// VC 발급 성공 및 실패 처리
       if (res.status === 200) {
         const vcData = res.data.vc;
 
@@ -62,6 +64,7 @@ export default function CardInput() {
         setError("VC 발급 실패");
         setCurrentStep("idle");
       }
+// 예외 처리 
     } catch (err) {
       console.error(err);
       const msg = err?.response?.data?.error || "VC 발급 실패! 다시 시도해주세요.";
@@ -71,7 +74,7 @@ export default function CardInput() {
 
     setLoading(false);
   };
-
+// Toss 결제 요청
   const handleTossPayment = () => {
     if (!window.TossPayments) {
       alert("TossPayments 스크립트가 로드되지 않았습니다.");
@@ -81,7 +84,7 @@ export default function CardInput() {
     const tossPayments = window.TossPayments("test_ck_mBZ1gQ4YVXQpB5wPnyA1rl2KPoqN");
     const orderId = "order-" + Date.now();
     const amount = 10000;
-
+// Toss 결제창 호출 및 에러 처리
     tossPayments
       .requestPayment("카드", {
         amount,
@@ -92,9 +95,9 @@ export default function CardInput() {
       })
       .catch((error) => {
         if (error.code === "USER_CANCEL") {
-          alert("❌ 사용자가 결제를 취소했습니다.");
+          alert("사용자가 결제를 취소했습니다.");
         } else {
-          alert("❌ 결제 오류: " + error.message);
+          alert("결제 오류: " + error.message);
         }
       });
   };
