@@ -97,7 +97,7 @@ DID (Decentralized Identifier)
 사용자의 지갑 주소를 기반으로 한 탈중앙 신원 식별자
 
 VC (Verifiable Credential)
-카드사가 서명한 “한 번만 사용할 수 있는 결제권한 증명서”
+카드사가 서명한 “한 번만 사용할 수 있는 결제권한 증명서
 
 VCRegistry.sol
 VC 해시 저장, 사용 상태 관리, 재사용 방지 기능 수행
