@@ -1,19 +1,27 @@
-// client/src/pages/payment/paymentresult.jsx
 import React, { useEffect, useState, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:3002';
 const SUCCESS_TEXT = 'PAYMENT SUCCESSFUL';
 
 export default function PaymentResultPage() {
+  // 처음엔 '결제 승인 중...' 성공하면 'PAYMENT SUCCESSFUL' 실패하면 '결제 실패'
   const [status, setStatus] = useState('결제 승인 중...');
+  // detail: 실패했을 때 이유/에러 메시지 저장
   const [detail, setDetail] = useState('');
+  // currentTime: 결제가 성공한 순간의 시각 (브라우저가 계산)
   const [currentTime, setCurrentTime] = useState('');
+  // vcExpirationDate: localStorage에 저장된 VC 만료시간
   const [vcExpirationDate, setVcExpirationDate] = useState('');
+  // vcInfo: localStorage에 있던 VC 전체 데이터
   const [vcInfo, setVcInfo] = useState(null);
+  // txHash: 블록체인 거래 해시
   const [txHash, setTxHash] = useState('');
+  // usedAt: VC가 실제로 사용된 시각: VC를 한 번 쓰고 나서 markVCUsed 처리된 시각
   const [usedAt, setUsedAt] = useState('');
 
+  // showVCPopup: VC 팝업(모달)이 열렸는지/닫혔는지
   const [showVCPopup, setShowVCPopup] = useState(false);
+  // didRun: 같은 코드가 두 번 실행되는 걸 막기 위해 쓰는 플래그
   const didRun = useRef(false);
 
   useEffect(() => {
@@ -26,6 +34,7 @@ export default function PaymentResultPage() {
         const paymentKey = params.get('paymentKey');
         const orderId = params.get('orderId');
         const amount = params.get('amount');
+        // localStorage에서 미리 저장해둔 vc를 가져옴
         const vc = JSON.parse(localStorage.getItem('vc') || 'null');
 
         if (!vc || !paymentKey || !orderId || !amount) {
@@ -92,7 +101,7 @@ export default function PaymentResultPage() {
         setStatus('결제 실패');
         setDetail(e?.message || '알 수 없는 오류');
       } finally {
-        window.history.replaceState({}, document.title, '/paymentresult');
+        window.history.replaceState({}, document.title, '/paymentresult'); //replaceState로 쿼리 제거(새로고침 시 재요청 방지)
       }
     })();
   }, []);
@@ -101,11 +110,10 @@ export default function PaymentResultPage() {
     <div className="page">
       <header className="header">
         <div className="brand">CHAINNOVA</div>
-        {/* <button className="main-btn" onClick={() => (window.location.href = '/')}>MAIN</button> */}
       </header>
 
       <main className="container">
-        {/* ✅ 체크 애니메이션 (성공시에만 노출) */}
+        {/* 체크 애니메이션 (성공시에만 노출) */}
         {status === SUCCESS_TEXT && (
           <div className="check-hero" aria-hidden>
             <svg className="checkmark" viewBox="0 0 52 52">
@@ -115,7 +123,6 @@ export default function PaymentResultPage() {
           </div>
         )}
 
-        {/* 텍스트를 체크 아래로 내려서 배치 */}
         <h2 className="status">{status}</h2>
         {detail && <p className="detail">{detail}</p>}
 
@@ -177,7 +184,7 @@ export default function PaymentResultPage() {
       {/* CSS */}
       <style>{`
         :root {
-          --pink: #ff2d86; /* 브랜드 핑크 - 체크 색상도 동일 */
+          --pink: #ff2d86; /* 브랜드 핑크 */
           --bg: #0b0b0e;
           --panel: #1a1a1d;
           --text: #ffffff;
@@ -201,10 +208,10 @@ export default function PaymentResultPage() {
           text-align:center;
         }
 
-        /* ✅ 체크 애니메이션: 위쪽 중앙 */
+        /* 체크 애니메이션: 위쪽 중앙 */
         .check-hero {
           display:flex; align-items:center; justify-content:center;
-          margin: 8px auto 18px; /* 텍스트를 아래로 조금 내리기 */
+          margin: 8px auto 18px;
         }
         .checkmark { width: 90px; height: 90px; }
         .checkmark-circle {

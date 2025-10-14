@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import PaymentIntro from './pages/payment/paymentIntro';
-import CardSelect from './pages/payment/cardselect';
 import CardInput from './pages/payment/cardinput';
 import PaymentResult from './pages/payment/paymentresult'; // 추가!
 
@@ -11,7 +10,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<PaymentIntro />} />            {/* 1페이지: 결제 안내 */}
-        <Route path="/card-select" element={<CardSelect />} />   {/* 2페이지: 카드 선택 */}
         <Route path="/card-input" element={<CardInput />} />     {/* 3페이지: 카드 정보 입력 */}
         <Route path="/paymentresult" element={<PaymentResult />} /> {/* 4페이지: 결제 완료 */}
       </Routes>

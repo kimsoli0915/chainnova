@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-/* ── Inline SVG 아이콘 (외부 패키지 無) ────────────────────────── */
 function IconPlay(props) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -56,8 +55,7 @@ function IconGithub(props) {
     </svg>
   );
 }
-
-/* ── 툴팁 (CSS :hover) ─────────────────────────────────────── */
+// 툴팁 (CSS :hover)
 function Tooltip({ label, children }) {
   return (
     <span className="tip-wrap">
@@ -67,7 +65,7 @@ function Tooltip({ label, children }) {
   );
 }
 
-/* ── 모달 (상태 기반, 바깥 클릭/ESC 닫기) ───────────────────── */
+// 모달 (상태 기반, 바깥 클릭/ESC 닫기)
 function Modal({ open, onClose, title, children }) {
   const panelRef = useRef(null);
 
@@ -102,12 +100,11 @@ function Modal({ open, onClose, title, children }) {
   );
 }
 
-/* ── 메인 컴포넌트 ──────────────────────────────────────────── */
+// 메인 컴포넌트 
 export default function PaymentIntro() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  // ◀︎◀︎ 파일 하나에 CSS 포함: <style> 태그로 주입
   const styles = `
   :root{
     --pink1:#ec4899;--pink2:#db2777;--pink3:#f472b6;
@@ -145,7 +142,6 @@ export default function PaymentIntro() {
   background-clip: text;
   color: transparent;
 
-  /* 금속광택 같은 입체 효과 */
   text-shadow: 
     0 1px 1px rgba(255,255,255,0.6),
     0 -1px 1px rgba(0,0,0,0.4),
@@ -157,7 +153,7 @@ export default function PaymentIntro() {
   bottom: 16px;
   text-align: left;
   color: #fff;
-  max-width: 400px; /* 너무 퍼지지 않도록 */
+  max-width: 400px;
 }
 
   .footer-about {font-size: 17px;font-weight: 900;display: block;margin-bottom: 6px;}
@@ -294,7 +290,7 @@ export default function PaymentIntro() {
 
       {/* 모달 */}
       <Modal open={open} onClose={() => setOpen(false)} title="Welcome to NOVAPAY">
-        <p>사용자의 전자서명을 기반으로 카드사가 발급한 VC를 활용하는 보안 결제 시스템입니다.</p>
+        <p>사용자의 전자서명과 VC로 결제의 유효성을 증명하는 차세대 신뢰 결제 플랫폼입니다.</p>
         <p className="mt">사용자가 MetaMask 서명으로 결제에 동의하면 카드사가 VC를 발급하고, 그 해시값과 사용여부를 블록체인에 기록하여 재사용을 차단합니다.</p>
         <p className="mt">서비스 제공자는 결제 시점에 VC의 유효성을 확인한 뒤 Toss Payments와 결합하여 안전하고 투명한 단일 결제를 보장합니다.</p>
       </Modal>
