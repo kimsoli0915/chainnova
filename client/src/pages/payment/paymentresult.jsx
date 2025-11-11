@@ -99,8 +99,11 @@ export default function PaymentResultPage() {
         }
       } catch (e) {
         setStatus('결제 실패');
+         if (e?.message?.includes('expired')) {
+        setDetail('VC expired'); // 간단히 표시
+        } else {
         setDetail(e?.message || '알 수 없는 오류');
-      } finally {
+      } 
         window.history.replaceState({}, document.title, '/paymentresult'); //replaceState로 쿼리 제거(새로고침 시 재요청 방지)
       }
     })();

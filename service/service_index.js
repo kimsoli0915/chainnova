@@ -21,7 +21,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   const t0 = Date.now();
   res.on('finish', () => {
-    console.log(`${re                                                                                                                   q.method} ${req.originalUrl} ${res.statusCode} - ${Date.now() - t0}ms`);
+    console.log('${req.method} ${req.originalUrl} ${res.statusCode} - ${Date.now() - t0}ms');
   });
   next();
 });
@@ -67,7 +67,7 @@ const contract = new ethers.Contract(VC_CONTRACT_ADDRESS, contractABI, signer);
 // 부팅 시 주소 검증 (실수 방지)
 (async () => {
   const code = await provider.getCode(VC_CONTRACT_ADDRESS);
-  if (code === '0x') throw new Error(`❌ 컨트랙트 코드 없음: ${VC_CONTRACT_ADDRESS} (주소/네트워크 확인)`);
+  if (code === '0x') throw new Error('❌ 컨트랙트 코드 없음: ${VC_CONTRACT_ADDRESS} (주소/네트워크 확인)');
 })().catch(e => { console.error(e); process.exit(1); });
 
 // ====== 유틸 ====== (유틸리티 함수 하단에 표로 정리...)
@@ -98,7 +98,7 @@ function assertNotExpired(vc, atMs = Date.now()) {
     throw err;
   }
   if (atMs >= expMs) {
-    const err = new Error(`VC expired at ${new Date(expMs).toISOString()}`);
+    const err = new Error('VC expired at ${new Date(expMs).toISOString()}');
     err.status = 400; err.code = 'VC_EXPIRED';
     throw err;
   }
@@ -109,7 +109,7 @@ async function ensureMarkUsed(vcHash) {
   if (!used) {
     const tx = await contract.markVCUsed(vcHash);
     await tx.wait(1);
-    console.log(`✅ markVCUsed: ${vcHash}`);
+    console.log('✅ markVCUsed: ${vcHash}');
   }
 }
 
@@ -207,7 +207,7 @@ app.post('/confirm-payment', async (req, res) => {
     if (!resp.ok) return fail('TOSS_CONFIRM_FAIL', '결제 실패 또는 대기', { tossResult: tossData });
     if (tossData?.status !== 'DONE') return fail('TOSS_NOT_DONE', '결제 미완료', { tossResult: tossData });
     if (String(tossData?.orderId) !== String(orderId))
-      return fail('ORDER_ID_MISMATCH', 'orderId 불일치', { tossResult: tossData });
+      return fail('ORDER_ID_MISMATCH','orderId 불일치', { tossResult: tossData });
     if (Number(tossData?.totalAmount) !== amtNum)
       return fail('AMOUNT_MISMATCH', '금액 불일치', { tossResult: tossData });
 
@@ -238,12 +238,12 @@ app.get('/health', (_, res) => res.json({ ok: true })); // 서버 살아 있는�
 // ====== 서버 기동 ======
 const PORT = Number(process.env.PORT || 3002);
 app.listen(PORT, async () => {
-  console.log(`✅ 서비스제공자 백엔드 실행됨: http://localhost:${PORT}`);
+  console.log('✅ 서비스제공자 백엔드 실행됨: http://localhost:${PORT}');
   try {
     const [addr, net] = await Promise.all([signer.getAddress(), provider.getNetwork()]);
-    console.log(`Signer: ${addr}`);
-    console.log(`ChainId: ${net.chainId.toString()}, RPC: ${provider._getConnection().url}`);
+    console.log('Signer: ${addr}');
+    console.log('ChainId: ${net.chainId.toString()}, RPC: ${provider._getConnection().url}');
   } catch (e) {
     console.warn('Signer/Provider 정보 조회 실패:', e.message);
   }
-});
+}); 
