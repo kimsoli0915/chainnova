@@ -55,7 +55,7 @@ DID (Decentralized Identifier)
 VC (Verifiable Credential)
 : 카드사가 서명한 한 번만 사용할 수 있는 결제권한 증명서
 
-블록체인 (BlockChain)
+BlockChain
 : VC 해시를 기록하고 사용 여부를 표시하여 double-spend 가능성을 차단 
 
 MetaMask
