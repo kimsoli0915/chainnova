@@ -47,6 +47,22 @@ Database: On-chain Registry (VC 해시 저장)
 
 
 
+## 🧠 주요 개념 
+
+DID (Decentralized Identifier)
+: 사용자의 지갑 주소를 기반으로 한 탈중앙 신원 식별자
+
+VC (Verifiable Credential)
+: 카드사가 서명한 한 번만 사용할 수 있는 결제권한 증명서
+
+블록체인 (BlockChain)
+: VC 해시를 기록하고 사용 여부를 표시하여 double-spend 가능성을 차단 
+
+MetaMask
+: 사용자는 서명 요청을 승인함으로써 자신이 이 VC의 실제 소유자임을 증명
+
+
+
 ## 💳결제 흐름 요약 
 1️⃣ DID 생성 및 메타마스크 서명 : 사용자가 자신의 지갑 주소 기반으로 서명합니다.
 
@@ -77,22 +93,6 @@ Database: On-chain Registry (VC 해시 저장)
 #### 서비스 제공자
 - 승인 결과가 서비스 제공자에게 전달될 때, confirm API를 호출
 #### -> 문제가 없을 경우 해당 VC를 블록체인에 사용 완료 상태로 기록하여 재사용을 차단
-
-
-
-## 🧠 주요 개념 
-
-DID (Decentralized Identifier)
-: 사용자의 지갑 주소를 기반으로 한 탈중앙 신원 식별자
-
-VC (Verifiable Credential)
-: 카드사가 서명한 한 번만 사용할 수 있는 결제권한 증명서
-
-블록체인 (BlockChain)
-: VC 해시를 기록하고 사용 여부를 표시하여 double-spend 가능성을 차단 
-
-MetaMask
-: 사용자는 서명 요청을 승인함으로써 자신이 이 VC의 실제 소유자임을 증명
 
 
 
